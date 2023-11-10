@@ -1,0 +1,161 @@
+Checking whether the transition system E_HR ⨂ E_SJ satisfies the formula Farrest
+Does not satisfy!
+Counter example:
+Path:
+Time Order:
+        six_pm < evening ≅ dusk
+Trust Relations:
+--------------------------
+Instant: 0
+State: <<s0, s0>, START>
+Local Interpretation Structure:
+Event: START
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), 
+--------------------------
+
+<<<START OF CYCLE>>>
+
+--------------------------
+Instant: 1
+State: <<s1, s0>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), 
+--------------------------
+Instant: 2
+State: <<s2, s0>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), 
+--------------------------
+
+<<<END OF CYCLE>>>
+
+
+Checking whether the transition system E_HR ⨂ E_SJ ⨂ E_PH satisfies the formula Farrest
+Does not satisfy!
+Counter example:
+Path:
+Time Order:
+        evening ≅ six_pm ≅ dusk
+Trust Relations:
+--------------------------
+Instant: 0
+State: <<<s0, s0>, s0>, START>
+Local Interpretation Structure:
+Event: START
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+
+<<<START OF CYCLE>>>
+
+--------------------------
+Instant: 1
+State: <<<s1, s0>, s0>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+Instant: 2
+State: <<<s2, s0>, s0>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+
+<<<END OF CYCLE>>>
+
+
+Checking whether the transition system E_HR ⨂ E_SJ ⨂ E_PH satisfies the formula (GFcrime => Farrest)
+Does not satisfy!
+Counter example:
+Path:
+Time Order:
+        evening ≅ six_pm ≅ dusk
+Trust Relations:
+--------------------------
+Instant: 0
+State: <<<s0, s0>, s0>, START>
+Local Interpretation Structure:
+Event: START
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+
+<<<START OF CYCLE>>>
+
+--------------------------
+Instant: 1
+State: <<<s3, s1>, s0>, crime>
+Local Interpretation Structure:
+Event: crime
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+Instant: 2
+State: <<<s4, s2>, s1>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (SJ : -(six_pm ∙ SJ_guilty)), (HR : (dusk ∙ HR_guilty)), 
+--------------------------
+Instant: 3
+State: <<<s3, s3>, s0>, crime>
+Local Interpretation Structure:
+Event: crime
+Claims: (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), (SJ : (evening ∙ SJ_guilty)), 
+--------------------------
+Instant: 4
+State: <<<s4, s0>, s1>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (SJ : -(six_pm ∙ SJ_guilty)), (HR : (dusk ∙ HR_guilty)), 
+--------------------------
+
+<<<END OF CYCLE>>>
+
+
+Checking whether the transition system E_HR ⨂ E_SJ ⨂ E_PH satisfies the formula (GFcrime => GF(HR : (six_pm ∙ HR_guilty)))
+Satisfies!
+
+Checking whether the transition system E_HR ⨂ E_SJ ⨂ E_PH satisfies the formula (GFcrime => (GF(HR : (six_pm ∙ HR_guilty)) ⋀ GF(SJ : (six_pm ∙ SJ_guilty))))
+Does not satisfy!
+Counter example:
+Path:
+Time Order:
+        evening ≅ six_pm ≅ dusk
+Trust Relations:
+--------------------------
+Instant: 0
+State: <<<s0, s0>, s0>, START>
+Local Interpretation Structure:
+Event: START
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+
+<<<START OF CYCLE>>>
+
+--------------------------
+Instant: 1
+State: <<<s1, s0>, s0>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+Instant: 2
+State: <<<s2, s0>, s0>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+Instant: 3
+State: <<<s3, s1>, s0>, crime>
+Local Interpretation Structure:
+Event: crime
+Claims: (SJ : -(evening ∙ SJ_guilty)), (HR : -(dusk ∙ HR_guilty)), (HR : -(six_pm ∙ HR_guilty)), 
+--------------------------
+Instant: 4
+State: <<<s4, s2>, s1>, meh>
+Local Interpretation Structure:
+Event: meh
+Claims: (SJ : -(evening ∙ SJ_guilty)), (SJ : -(six_pm ∙ SJ_guilty)), (HR : (dusk ∙ HR_guilty)), 
+--------------------------
+
+<<<END OF CYCLE>>>

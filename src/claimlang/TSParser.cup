@@ -1,0 +1,215 @@
+/*
+ * The EventTransitionSystem class used to be called ActionTransitionSystem.
+ * This is why there are many references to action_statements, action_state, action_transitions, etc.
+ * The classes in the AST are also called ActionStateNode, etc. It would be nice to change these all
+ * to EventStateNode, etc.
+ */
+
+package claimlang;
+
+import java_cup.runtime.*;
+
+import transition_system_parser.AST.*;
+import java.util.List;
+import java.util.LinkedList;
+
+
+/* Terminals (tokens returned by the scanner). */
+terminal 			tTRANSITIONSYSTEM, tACTIONTRANSITIONSYSTEM, tSTATE, tINITIAL, tTIMEORDER, tTRUSTORDER, tEVENT;
+terminal			tARROW, tMINUS, tDOT, tLT, tAGENTLT, tEQ, tCOLON, tSEMICOLON, tPRODUCT;
+terminal			tLPAREN, tRPAREN, tLBRACK, tRBRACK, tLCURLY, tRCURLY;
+terminal			tSATISFIABLE, tSATISFIES, tVALID, tCHECK, tFORMULA;
+terminal String 	tIDENTIFIER, tFORMULALITERAL;
+
+/* Non terminals */
+
+non terminal FileNode						file;
+non terminal List<BasicNode>				declarations;
+non terminal BasicNode						declaration;
+non terminal TransitionSystemNode			transition_system; 
+non terminal ActionTransitionSystemNode		action_transition_system;  
+non terminal List<BasicNode> 				statements;
+non terminal List<BasicNode> 				action_statements;  
+non terminal BasicNode						statement;  
+non terminal BasicNode 						action_statement;  
+non terminal TimeOrderNode					time_order;  
+non terminal TrustOrderNode					trust_order;  
+non terminal StateNode						state;  
+non terminal ActionStateNode				action_state;  
+non terminal TransitionNode					transitions;  
+non terminal ActionTransitionNode			action_transitions;  
+non terminal EventNode						state_event;
+non terminal String							transition_event;  
+non terminal List<TrustLessThanNode>		trust_chain;  
+non terminal List<TrustLessThanNode>		trust_chains;  
+non terminal List<TimeComparisonNode>		time_chain;  
+non terminal List<TimeComparisonNode>		time_chains;  
+non terminal List<BasicNode>				state_statements;  
+non terminal List<BasicNode>				action_state_statements;  
+non terminal ClaimNode 						claim;  
+non terminal List<BasicNode> 				claims;
+non terminal BasicNode						check;
+non terminal BasicNode						assignment;
+non terminal PrintableNode					ts_expression; /* an expression which evaluates to a TS */
+non terminal BasicNode						formula_expression; /* an expression which evaluates to a formula */
+/* this is feasable because we only have two types */
+
+precedence left tPRODUCT;
+
+/* The grammar rules */
+start with file;
+
+file	::= /*empty*/			{: RESULT = new FileNode(new LinkedList<>()); :}
+		|	declarations:decls	{: RESULT = new FileNode(decls); :}
+		;
+
+declarations	::=	declaration:decl					{: RESULT = new LinkedList<>(); RESULT.add(decl); :}
+				|	declarations:decls declaration:decl {: decls.add(decl); RESULT = decls; :}
+				;
+				
+declaration ::=	transition_system:ts		{: RESULT = ts;       :}
+			|	action_transition_system:ts	{: RESULT = ts;       :}
+			|	check:chck					{: RESULT = chck;     :}
+			|   assignment:assgnmnt			{: RESULT = assgnmnt; :}
+			;
+						
+transition_system	::=	tTRANSITIONSYSTEM tIDENTIFIER:id tLCURLY statements:stmnts tRCURLY	
+							{: RESULT = new TransitionSystemNode(id, stmnts); :}
+					;
+
+action_transition_system 	::=	tACTIONTRANSITIONSYSTEM tIDENTIFIER:id tLCURLY action_statements:stmnts tRCURLY
+									{: RESULT = new ActionTransitionSystemNode(id, stmnts); :}
+							;
+
+statements 	::= statement:stmnt						{: RESULT = new LinkedList<>(); RESULT.add(stmnt); :}
+			|	statement:stmnt statements:stmnts	{: stmnts.add(0, stmnt); RESULT = stmnts; :}
+			;
+			
+action_statements 	::= action_statement:stmnt							{: RESULT = new LinkedList<>(); RESULT.add(stmnt); :}
+					|	action_statement:stmnt action_statements:stmnts	{: stmnts.add(0, stmnt); RESULT = stmnts; :}
+					;
+
+statement 	::= time_order:stmnt	{: RESULT = stmnt; :}
+			|	trust_order:stmnt	{: RESULT = stmnt; :}
+			|	state:stmnt			{: RESULT = stmnt; :}
+			|	transitions:stmnt	{: RESULT = stmnt; :}
+			;
+			
+action_statement 	::= time_order:stmnt			{: RESULT = stmnt; :}
+					|	trust_order:stmnt			{: RESULT = stmnt; :}
+					|	action_state:stmnt			{: RESULT = stmnt; :}
+					|	action_transitions:stmnt		{: RESULT = stmnt; :}
+					;
+			
+time_order	::=	tTIMEORDER time_chain:tc						{: RESULT = new TimeOrderNode(tc); :}
+			|	tTIMEORDER tLCURLY time_chains:tc tRCURLY		{: RESULT = new TimeOrderNode(tc); :}
+			;
+
+time_chains	::= time_chain:tc					{: RESULT = tc; :}
+			|	time_chains:tcs time_chain:tc	{: tcs.addAll(tc); RESULT = tcs; :}
+			;
+			
+time_chain	::=	tIDENTIFIER:idtime1 tLT tIDENTIFIER:idtime2	tSEMICOLON	
+					{: RESULT = new LinkedList<>(); RESULT.add(new TimeLessThanNode(idtime1, idtime2)); :}
+			|	tIDENTIFIER:idtime1 tEQ tIDENTIFIER:idtime2	tSEMICOLON
+					{: RESULT = new LinkedList<>(); RESULT.add(new TimeEqualsNode(idtime1, idtime2)); :}
+			|	tIDENTIFIER:idtime	tLT time_chain:tc
+					{: tc.add(0, new TimeLessThanNode(idtime, tc.get(0).idLeft) ); RESULT = tc; :}
+			|	tIDENTIFIER:idtime  tEQ time_chain:tc 
+					{: tc.add(0, new TimeEqualsNode(idtime, tc.get(0).idLeft) ); RESULT = tc; :}
+			;
+			
+			
+trust_order	::=	tTRUSTORDER trust_chain:tc					{: RESULT = new TrustOrderNode(tc); :}
+			|	tTRUSTORDER tLCURLY trust_chains:tc tRCURLY	{: RESULT = new TrustOrderNode(tc); :}
+			;
+
+trust_chains::=	trust_chain:tc					{: RESULT = tc; :}
+			|	trust_chains:tcs trust_chain:tc	{: tcs.addAll(tc); RESULT = tcs; :}
+			;
+						
+trust_chain	::= tIDENTIFIER:idagent1 tAGENTLT tLBRACK tIDENTIFIER:idprop tRBRACK tIDENTIFIER:idagent2 tSEMICOLON
+					{: RESULT = new LinkedList<>(); RESULT.add(new TrustLessThanNode(idagent1, idprop, idagent2)); :}
+			|	tIDENTIFIER:idagent1 tLT      tLBRACK tIDENTIFIER:idprop tRBRACK tIDENTIFIER:idagent2 tSEMICOLON
+					{: RESULT = new LinkedList<>(); RESULT.add(new TrustLessThanNode(idagent1, idprop, idagent2)); :}
+			|	tIDENTIFIER:idagent  tLT      tLBRACK tIDENTIFIER:idprop tRBRACK trust_chain:tc  					
+					{: tc.add(0, new TrustLessThanNode(idagent, idprop, tc.get(0).idLeft) ); RESULT = tc; :}
+			|	tIDENTIFIER:idagent  tAGENTLT tLBRACK tIDENTIFIER:idprop tRBRACK trust_chain:tc 
+					{: tc.add(0, new TrustLessThanNode(idagent, idprop, tc.get(0).idLeft) ); RESULT = tc; :}
+			;
+	
+
+state	::=	tSTATE tIDENTIFIER:id tLCURLY state_statements:stmnts tRCURLY	
+				{: RESULT = new StateNode(id, false, stmnts); :}
+		|	tINITIAL tSTATE tIDENTIFIER:id tLCURLY state_statements:stmnts tRCURLY	
+				{: RESULT = new StateNode(id, true, stmnts); :}
+		;
+		
+action_state	::=	tSTATE tIDENTIFIER:id tLCURLY action_state_statements:stmnts tRCURLY
+						{: RESULT = new ActionStateNode(id, false, stmnts); :}
+				|	tINITIAL tSTATE tIDENTIFIER:id tLCURLY state_statements:stmnts tRCURLY	
+						{: RESULT = new ActionStateNode(id, true, stmnts); :}	
+				;
+		
+state_statements	::=	/*empty*/											{: RESULT = new LinkedList<>(); :}
+					|	claims:stmnts										{: RESULT = stmnts; :}
+					|	state_event:evnt									{: RESULT = new LinkedList<>(); RESULT.add(evnt); :}
+					|	state_event:evnt claims:stmnts						{: stmnts.add(evnt); RESULT = stmnts; :}
+					|	claims:stmnts1 state_event:evnt claims:stmnts2 	
+							{: stmnts1.add(evnt); stmnts1.addAll(stmnts2); RESULT = stmnts1; :}
+					|	claims:stmnts state_event:evnt						{: stmnts.add(evnt); RESULT = stmnts; :}
+					;
+					
+action_state_statements	::=	/*empty*/		{: RESULT = new LinkedList<>(); :}
+						|	claims:clms		{: RESULT = clms; :}
+						;
+					
+claim	::=	tIDENTIFIER:idagent tCOLON tIDENTIFIER:idtime tDOT tIDENTIFIER:idprop tSEMICOLON						
+				{: RESULT = new ClaimNode(idagent, false, idtime, idprop); :}
+		|	tIDENTIFIER:idagent tCOLON tLPAREN tIDENTIFIER:idtime tDOT tIDENTIFIER:idprop tRPAREN tSEMICOLON
+				{: RESULT = new ClaimNode(idagent, false, idtime, idprop); :}
+		|	tIDENTIFIER:idagent tCOLON tMINUS tIDENTIFIER:idtime tDOT tIDENTIFIER:idprop tSEMICOLON
+				{: RESULT = new ClaimNode(idagent, true, idtime, idprop); :}
+		|	tIDENTIFIER:idagent tCOLON tMINUS tLPAREN tIDENTIFIER:idtime tDOT tIDENTIFIER:idprop tRPAREN tSEMICOLON
+				{: RESULT = new ClaimNode(idagent, true, idtime, idprop); :}
+		;
+
+claims	::=	claim:clm				{: RESULT = new LinkedList<>(); RESULT.add(clm); :}
+		|	claim:clm claims:clms	{: clms.add(clm); RESULT = clms; :}
+		;
+		
+state_event	::= tEVENT tLPAREN tIDENTIFIER:id tRPAREN tSEMICOLON	{: RESULT = new EventNode(id); :}
+			;
+			
+transition_event	::=	tLBRACK tIDENTIFIER:id tRBRACK			{: RESULT = id; :}
+					;
+					
+transitions	::=	tIDENTIFIER:idsource tARROW tIDENTIFIER:idtarget tSEMICOLON {: RESULT = new TransitionNode(idsource, idtarget); :}
+			|	tIDENTIFIER:idsource tARROW transitions:trnstnts			{: RESULT = trnstnts.prepend(idsource); :}
+			;
+
+action_transitions	::=	transition_event:evnt transitions:trnstns 	{: RESULT = new ActionTransitionNode(evnt, trnstns); :}
+					|	transitions:trnstns 						{: RESULT = new ActionTransitionNode(null, trnstns); :}
+					;
+					
+					
+					
+check	::=	tCHECK formula_expression:formula	tSATISFIABLE 							tSEMICOLON	{: RESULT = new CheckSatNode(formula); :}
+		|	tCHECK formula_expression:formula 	tVALID 									tSEMICOLON	{: RESULT = new CheckValNode(formula); :}
+		|	tCHECK ts_expression:ts 			tSATISFIES formula_expression:formula	tSEMICOLON	{: RESULT = new CheckTSSatFormulaNode(ts, formula); :}
+		;
+		
+assignment	::=	tFORMULA 				tIDENTIFIER:id tEQ formula_expression:formula	tSEMICOLON	{: RESULT = new FormulaAssignmentNode(id, formula); :}
+			|	tTRANSITIONSYSTEM 		tIDENTIFIER:id tEQ ts_expression:ts				tSEMICOLON	{: RESULT = new TSAssignmentNode(id, ts); :}
+			|	tACTIONTRANSITIONSYSTEM	tIDENTIFIER:id tEQ ts_expression:ts 			tSEMICOLON 	{: RESULT = new ATSAssignmentNode(id, ts); :}
+			;
+			
+
+			
+ts_expression	::=	tIDENTIFIER:id										{: RESULT = new RValueNode(id); :}
+				| 	ts_expression:_left tPRODUCT ts_expression:_right	{: RESULT = new ProductNode(_left, _right); :}
+				;
+
+formula_expression	::=	tIDENTIFIER:id					{: RESULT = new RValueNode(id); :}
+					| 	tFORMULALITERAL:string			{: RESULT = new FormulaLiteralNode(string); :}
+					;					

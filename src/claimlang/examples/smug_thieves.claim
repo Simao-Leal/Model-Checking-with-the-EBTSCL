@@ -1,0 +1,109 @@
+//Thief 1: Hobin Rood 
+EventTransitionSystem E_HR {
+
+    Initial State s0 {HR : - dusk . HR_guilty;} //Silent
+
+            State s1 {HR : - dusk . HR_guilty;} //Silent
+        
+            State s2 {HR : - dusk . HR_guilty;} //Silent
+        
+            State s3 {HR : - dusk . HR_guilty;} //Boasting
+        
+            State s4 {HR :   dusk . HR_guilty;} //Revealing
+        
+            State s5 {HR : - dusk . HR_guilty;} //Silent - arrested
+
+    //Transitions
+    //with the meh event
+    [meh] s0 -> s1 -> s2 -> s1;
+    [meh] s4 -> s1;
+    [meh] s5 -> s5;
+    //with the null event (epsilon)
+    s3 -> s4;
+    //with the crime event
+    [crime] s0 -> s3;
+    [crime] s2 -> s3;
+    [crime] s4 -> s3;
+    //with the arrest event
+    [arrest] s4 -> s5;   
+}
+
+//Thief 2: Spack Jarrow
+EventTransitionSystem E_SJ {
+
+    Initial State s0 {SJ : - evening . SJ_guilty;} //Silent
+
+            State s1 {SJ : - evening . SJ_guilty;} //Boasting
+
+            State s2 {SJ : - evening . SJ_guilty;} //Boasting
+
+            State s3 {SJ :   evening . SJ_guilty;} //Revealing
+
+            State s4 {SJ : - evening . SJ_guilty;} //Silent - arrested
+
+    //Transitions
+    //with the meh event
+    [meh] s1 -> s2 -> s0 -> s0;
+    [meh] s3 -> s0;
+    [meh] s4 -> s4;  
+
+    //with the crime event
+    [crime] s0 -> s1 -> s3 -> s3;
+    [crime] s2 -> s3;
+
+    //with the arrest event
+    [arrest] s3 -> s4;
+}
+
+//Detective: Percule Hoirot
+EventTransitionSystem E_PH {
+
+    TimeOrder evening = dusk = six_pm;
+
+    Initial State s0 {HR : - six_pm . HR_guilty;}
+
+    /*Initial*/ State s1 {SJ : - six_pm . SJ_guilty;}
+
+            State s2 {HR : six_pm . HR_guilty; SJ : six_pm . SJ_guilty;}
+        
+            State s3 {} //arrested criminals
+
+    //Transitions
+    //with the null event (epsilon)
+    s0 -> s0;
+    s1 -> s1;
+    s0 -> s1 -> s0;
+    s0 -> s2;
+    s1 -> s2;
+    s3 -> s3;
+    //with the arrest event
+    [arrest] s2 -> s3;
+}
+
+//Defining formulas to check:
+Formula phi1 = "F(arrest)";
+
+Formula phi2 = "(G F crime) implies (F(arrest))";
+
+Formula phi3 = "(G F crime) implies (G F(HR : six_pm . HR_guilty))";
+
+Formula phi4 = "(G F crime) implies (G F(HR : six_pm . HR_guilty)) and (G F(SJ : six_pm . SJ_guilty))";
+
+Formula phi5 = "(F (crime and (X crime))) implies (F(arrest))";
+
+Formula phi6 = "G( (crime and (X crime)) implies (X X (arrest)) )";
+
+//Checking formulas
+Check E_HR * E_SJ Satisfies phi1;
+
+Check E_HR * E_SJ * E_PH Satisfies phi1;
+
+Check E_HR * E_SJ * E_PH Satisfies phi2;
+
+Check E_HR * E_SJ * E_PH Satisfies phi3; 
+
+Check E_HR * E_SJ * E_PH Satisfies phi4;
+
+// Check E_HR * E_SJ * E_PH Satisfies phi5; //takes too long to verify
+
+// Check E_HR * E_SJ * E_PH Satisfies phi6; //takes too long to verify

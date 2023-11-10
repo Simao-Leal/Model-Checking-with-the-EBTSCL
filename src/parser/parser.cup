@@ -1,0 +1,116 @@
+package parser;
+
+import java_cup.runtime.*;
+
+import formulas.*;
+import formulas.atemporal.*;
+import formulas.LTL.*;
+import formulas.propositional.*;
+import symbols.*;
+
+
+/* Terminals (tokens returned by the scanner). */
+terminal			MINUS, DOT, LT, AGENTLT, EQ, COLON, SQUARE;
+terminal			NOT, IFF, IMPLIES, AND, OR, TRUE, FALSE;
+terminal			ALWAYS, EVENTUALLY, NEXT, UNTIL;
+terminal			LPAREN, RPAREN, LBRACK, RBRACK;
+terminal String 	IDENTIFIER;
+
+/* Non terminals */
+non terminal Formula			formula;
+non terminal Formula			atempform; /* this has to be of type formula, as it might include chains (with And)*/
+non terminal Formula 			timeChain;
+non terminal Formula 			trustChain;
+non terminal Claim 				claim;
+
+/* precedence */
+precedence left ALWAYS, EVENTUALLY, NEXT, UNTIL;
+precedence left IFF, IMPLIES;
+precedence left AND, OR;
+precedence left NOT;
+
+
+/* The grammar rules */
+start with formula;
+
+formula	::=	LPAREN formula:f RPAREN				{: RESULT = f; :}
+		|	TRUE								{: RESULT = new True(); :}
+		|	FALSE								{: RESULT = new False(); :}
+		|	IDENTIFIER:id						{: RESULT = new Event(new EventSymbol(id)); :}
+		|	atempform:af						{: RESULT = af; :}
+		|	NOT formula:f						{: RESULT = f.negate(); :}
+		|	ALWAYS formula:f					{: RESULT = new Always(f); :}
+		|	EVENTUALLY formula:f				{: RESULT = new Eventually(f); :}
+		|	NEXT formula:f						{: RESULT = new Next(f); :}
+		|	formula:f1 IFF formula:f2			{: RESULT = new Equivalent(f1, f2); :}
+		|	formula:f1 IMPLIES formula:f2		{: RESULT = new Implies(f1, f2); :}
+		|	formula:f1 AND formula:f2			{: RESULT = new And(f1, f2); :}
+		|	formula:f1 OR formula:f2			{: RESULT = new Or(f1, f2); :}
+		|	formula:f1 UNTIL formula:f2			{: RESULT = new Until(f1, f2); :}
+		;
+		
+atempform	::=	claim:c																{: RESULT = c; :}
+			|	IDENTIFIER:id COLON claim:c											{: RESULT = new AgentClaim(new AgentSymbol(id), c); :}
+			|	IDENTIFIER:id COLON LPAREN claim:c RPAREN							{: RESULT = new AgentClaim(new AgentSymbol(id), c); :}
+			|	IDENTIFIER:id COLON SQUARE claim:c									{: RESULT = new MostTrustworthy(new AgentSymbol(id), c); :}
+			|	IDENTIFIER:id COLON SQUARE LPAREN claim:c RPAREN					{: RESULT = new MostTrustworthy(new AgentSymbol(id), c); :}
+			|	timeChain:tc														{: RESULT = tc; :}
+			|	trustChain:tc														{: RESULT = tc; :}
+			;
+			
+trustChain	::= IDENTIFIER:id1 AGENTLT LBRACK IDENTIFIER:id2 RBRACK IDENTIFIER:id3	{: RESULT = new LessTrustworthy(new AgentSymbol(id1), 
+																						new PropositionalSymbol(id2), new AgentSymbol(id3)); :}
+			|	IDENTIFIER:id1 LT LBRACK IDENTIFIER:id2 RBRACK IDENTIFIER:id3		{: RESULT = new LessTrustworthy(new AgentSymbol(id1), 
+																						new PropositionalSymbol(id2), new AgentSymbol(id3)); :}
+			|	trustChain:tc LT LBRACK IDENTIFIER:id1 RBRACK IDENTIFIER:id2		{:
+																					LessTrustworthy previous;
+																					if(tc instanceof And){
+																						previous = (LessTrustworthy)((And) tc).getInner2();
+																					} else {
+																						previous = (LessTrustworthy) tc;
+																					}
+																					RESULT = new And(tc , new LessTrustworthy(previous.getAgent2(), 
+																						new PropositionalSymbol(id1), new AgentSymbol(id2)));
+																					:}
+			|	trustChain:tc AGENTLT LBRACK IDENTIFIER:id1 RBRACK IDENTIFIER:id2		{:
+																					LessTrustworthy previous;
+																					if(tc instanceof And){
+																						previous = (LessTrustworthy)((And) tc).getInner2();
+																					} else {
+																						previous = (LessTrustworthy) tc;
+																					}
+																					RESULT = new And(tc , new LessTrustworthy(previous.getAgent2(), 
+																						new PropositionalSymbol(id1), new AgentSymbol(id2)));
+																					:}
+			;
+			
+
+timeChain	::=	IDENTIFIER:id1 LT IDENTIFIER:id2	{: RESULT = new TimeLessThan(new TimeSymbol(id1), new TimeSymbol(id2)); :}
+			|	IDENTIFIER:id1 EQ IDENTIFIER:id2	{: RESULT = new TimeEquals(new TimeSymbol(id1), new TimeSymbol(id2)); :}
+			|	timeChain:tc LT IDENTIFIER:id		{:
+														BinaryTimeRelation previous;
+														if(tc instanceof And){
+															previous = (BinaryTimeRelation)((And) tc).getInner2();
+														} else {
+															previous = (BinaryTimeRelation) tc;
+														}
+														RESULT = new And(tc , new TimeLessThan(previous.getTime2(), new TimeSymbol(id)));
+													:}
+			|	timeChain:tc EQ IDENTIFIER:id		{:
+														BinaryTimeRelation previous;
+														if(tc instanceof And){
+															previous = (BinaryTimeRelation)((And) tc).getInner2();
+														} else {
+															previous = (BinaryTimeRelation) tc;
+														}
+														RESULT = new And(tc , new TimeEquals(previous.getTime2(), new TimeSymbol(id)));
+													:}
+			;
+
+claim	::=	IDENTIFIER:id1 DOT IDENTIFIER:id2						{: RESULT = new Claim(new TimeSymbol(id1), 
+																		new PropositionalSymbol(id2)); :}
+		|	MINUS IDENTIFIER:id1 DOT IDENTIFIER:id2					{: RESULT = new Claim(new TimeSymbol(id1), 
+																		new PropositionalSymbol(id2)).invert(); :}
+		|	MINUS LPAREN IDENTIFIER:id1 DOT IDENTIFIER:id2 RPAREN	{: RESULT = new Claim(new TimeSymbol(id1), 
+																		new PropositionalSymbol(id2)).invert(); :}
+		;

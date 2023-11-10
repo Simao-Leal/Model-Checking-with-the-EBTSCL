@@ -1,0 +1,28 @@
+TransitionSystem T {
+    //Defining time and trust orders
+    TrustOrder  a1 <[p] a2;
+    TimeOrder t1 = t2 < t3;
+
+    //Defining states
+    Initial State s0 {
+        Event(eA);
+    }
+
+    State s1 {
+        Event(eB);
+        a1 : t1 . p;
+    }
+
+    State s2 {
+        Event(eA);
+        a2 : - t2 . p;
+    }
+
+    State s3 {
+        a1 : - t2 . p;
+        a2 :   t3 . p;
+    }
+
+    //Defining transitions
+    s0 -> s1 -> s3 -> s2 -> s3 -> s3;
+}

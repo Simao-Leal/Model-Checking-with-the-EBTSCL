@@ -1,0 +1,35 @@
+Checking whether the transition system T satisfies the formula ((FG(t ∙ lis_bt_cph) ⋀ FG(t ∙ lis_bt_muc)) ⋀ FG(t ∙ lis_bt_ber))
+Does not satisfy!
+Counter example:
+Path:
+Time Order:
+        t
+Trust Relations:
+        bob ⊴[lis_bt_ber] bob, bob ⊴[lis_bt_ber] charlie, alice ⊴[lis_bt_ber] alice, alice ⊴[lis_bt_ber] charlie, charlie ⊴[lis_bt_ber] charlie, 
+        bob ⊴[lis_bt_muc] bob, alice ⊴[lis_bt_muc] alice, alice ⊴[lis_bt_muc] bob, charlie ⊴[lis_bt_muc] charlie, charlie ⊴[lis_bt_muc] alice, charlie ⊴[lis_bt_muc] bob, 
+        bob ⊴[lis_bt_cph] alice, bob ⊴[lis_bt_cph] charlie, bob ⊴[lis_bt_cph] bob, alice ⊴[lis_bt_cph] alice, charlie ⊴[lis_bt_cph] charlie, charlie ⊴[lis_bt_cph] alice, 
+--------------------------
+Instant: 0
+State: money
+Local Interpretation Structure:
+Event: meh
+Claims: (bob : -(t ∙ lis_bt_muc)), (alice : -(t ∙ lis_bt_cph)), (charlie : -(t ∙ lis_bt_ber)), (charlie : (t ∙ lis_bt_cph)), 
+--------------------------
+
+<<<START OF CYCLE>>>
+
+--------------------------
+Instant: 1
+State: weather
+Local Interpretation Structure:
+Event: meh
+Claims: (bob : (t ∙ lis_bt_ber)), (alice : (t ∙ lis_bt_muc)), (charlie : (t ∙ lis_bt_cph)), 
+--------------------------
+Instant: 2
+State: money
+Local Interpretation Structure:
+Event: meh
+Claims: (bob : -(t ∙ lis_bt_muc)), (alice : -(t ∙ lis_bt_cph)), (charlie : -(t ∙ lis_bt_ber)), (charlie : (t ∙ lis_bt_cph)), 
+--------------------------
+
+<<<END OF CYCLE>>>

@@ -1,0 +1,206 @@
+/*
+Claim Lang Documentation
+
+This file contains some examples which should be enough to grasp the main aspects
+of ClaimLang syntax. In case of doubt consult the full grammar file.
+*/
+
+//=========== Comments =========== 
+
+//A line comment!
+
+/*
+A multi-
+-line comment
+*/
+
+//=========== Defining a Transition System =========== 
+
+TransitionSystem T1 {
+
+    //=========== Defining the trust and time orders =========== 
+
+    TimeOrder{
+        //each line is a time-stamp chain separeted by a ";"
+        t1 < t2;
+        t2 = t3;
+        t4 < t5 = t6 < t7; 
+        //this is interpreted as t4 < t5 and t5 = t6 and t6 < t7   
+    }
+    /*
+    If the order consists of only one statement, then the curly
+    brackets are not necessary. For example,
+    TimeOrder t1 < t2 = t3;
+    */
+
+    TrustOrder{
+        /*
+        Similar to time order. We write a1 <[p] a2 to denote the
+        relation "a2 is less or as trustworthy as a1 with respect
+        to p".
+        */
+        a1 <[p1] a2 <[p2] a3;
+        //this is interpreted as a1 <[p1] a2 and a2 <[p2] a3
+    }
+
+    //=========== Defining states =========== 
+    
+    State s0 {
+        //each line is a claim made in that state by some agent or the event declaration
+        Event(eA);
+        a1 : t1 . p1;
+        a2 : - t2 . p2;
+    }
+
+    //Use the keyword "Initial" to declare a state as initial 
+    Initial State s1 {
+        Event(eB);
+        a3 : - t1 . p1;
+    }
+
+    //A state can have no claims
+    State s2 {
+        Event(eC);
+    }
+
+    //If no event is declared, the state gets the null event (epsilon)
+    State s3 {
+        a2 : t2 . p2;
+    }
+
+    //=========== Defining transitions between states ===========
+    //each line is a chain of transitions
+    s1 -> s3;
+    s1 -> s1; //a state can have a transition to itself
+    s0 -> s2 -> s1 -> s0;
+    //this is interpreted as s0 -> s2 and s2 -> s1 and s1 -> s0
+}
+
+//=========== Defining an Event Transition System =========== 
+
+/*
+Similar to the plain Transtition System, but the events are declared in
+the transitions instead of in the states
+*/
+
+EventTransitionSystem E1 {
+    /*
+    Defining the Time Order or Trust Order is optional for 
+    both the TransitionSystem and EventTransitionSystem
+    */
+
+    State s0 {
+        a1 : t . p;
+    }
+
+    State s1 {
+        a2 : t . p;
+    }
+
+    State s2 {}
+
+    //we use the notation [e] sx -> sy to denote a transition from sx to sy with event e:
+    [eA] s0 -> s1;
+
+    //this is interpreted as before, where the two transitions are with event eB
+    [eB] s1 -> s0 -> s2;
+    
+    //if no event is declared, the transition gets the null event (epsilon)
+    s2 -> s0;
+}
+
+//=========== Product and Conversion Declarations =========== 
+
+//Assume we have declared some other transition systems T2, E2 and E3.
+
+TransitionSystem Tprod1 = T1 * T2;
+
+EventTransitionSystem Eprod = E1 * E2 * E3;
+
+/*
+You cannot multiply a Transition System with an Event Transition System.
+*/
+
+TransitionSystem Tprod2 = T1 * E1; //this will result in an error
+
+//=========== Formulas ===========
+/*
+Within a ClaimLang file we write formulas between two double quotes.
+The text inside the quotes is interpreted by the formula compiler.
+Some keywords have alternate versions. For example the "square" operator can
+also be represented by "boxdot". Check the lexer specification for more details.
+*/
+
+//Atomic
+Formula phi1 = "a1 : t . p";
+Formula phi2 = "a2 : - t . p";
+Formula phi3 = "a2 : square t . p";
+Formula phi4 = "- t . p"
+Formula phi5 = "t1 < t2";
+//We can also use chains for formulas
+Formula phi6 = "t2 = t3 < t4";
+//This is interpreted as t2 = t3 and t3 < t4
+Formula phi7 = "a1 <[p] a2";
+
+//Event
+//Just type the name. It gets parsed as an event by the context.
+Formula phi8 = "eA"; //in this context, eA is interpreted as an event name.
+
+//Propositional
+Formula phi8 = "true";
+Formula phi9 = "false";
+Formula phi10 = "not p"; //notice that p is parsed as events
+Formula phi11 = "p and q"; 
+Formula phi12 = "p or q";
+Formula phi13 = "p implies q";
+Formula phi14 = "p iff q";
+
+//Linear Temporal
+Formula phi15 = "X p";
+Formula phi16 = "G p";
+Formula phi17 = "F p";
+Formula phi18 = "p U q";
+/*
+Important note:
+Names of agent, time, propositional and event symbols must not start 
+with X, G, or U, as to not be confused with the time operators.
+*/
+
+//Operator precedence
+/*
+Whenever multiple operators are placed in succession, the expression
+is evaluated from left to right and following the precedence values of
+each operator
+
++------------+--------------+
+| Precedence | Operators    |
++------------+--------------+
+| 1          | not          |
++------------+--------------+
+| 2          | and, or      |
++------------+--------------+
+| 3          | iff, implies |
++------------+--------------+
+| 4          | X, G, F, U   |
++------------+--------------+
+*/
+//As an example:
+Formula phi21 = "X p and not q implies r implies s";
+//Gets interpreted as X(((p and (not q)) implies r) iff s)
+
+//=========== Check Statements ===========
+
+Check phi1 Satisfiable;
+Check phi1 Valid;
+Check T1 Satisfies phi1;
+
+//One can define the product of transition systems and formulas "on the spot"
+Check T1 * T2 Satisfies "G(a1 : t . p)";
+
+/*
+If preforming a check on an EventTransitionSystem, it gets converted
+into a plain TransitionSystem automatically.
+*/
+Check E1 Satisfies phi1;
+//is equivalent to
+Check Convert(E1) Satisfies phi1;

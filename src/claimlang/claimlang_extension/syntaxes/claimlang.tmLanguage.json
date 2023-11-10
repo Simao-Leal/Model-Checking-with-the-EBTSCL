@@ -1,0 +1,164 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "ClaimLang",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#punctuation"
+		},
+		{
+			"include": "#operators"
+		},
+		{
+			"include": "#formula_literals"
+		},
+		{
+			"include": "#identifiers"
+		}
+	],
+	"repository": {
+		"comments": {
+			"patterns":[
+			{
+				"match": "//.*$",
+				"name": "comment.line.double-slash.claimlang"
+			},
+			{
+				"begin": "/\\*",
+				"beginCaptures": {
+					"0": { "name": "punctuation.definition.comment.begin.claimlang" }
+				},
+				"end": "\\*/",
+				"endCaptures": {
+					"0": { "name": "punctuation.definition.comment.end.claimlang" }
+				},
+				"name": "comment.block.claimlang",
+				"patterns": [
+					{
+						"match": "(\\*)+/",
+						"name": "comment.block.claimlang"
+					}
+				]
+			}]
+		},
+		"operators": {
+			"patterns": [{
+				"name": "keyword.operator.arithmetic.transition.claimlang",
+				"match": "->"
+			},
+			{
+				"name": "keyword.operator.arithmetic.claimlang",
+				"match": "<|⊴|-|\\.|∙|\\*|≅|:"
+			},
+			{
+				"name": "keyword.operator.assignment.claimlang",
+				"match": "="
+			},
+			{
+				"name": "keyword.operator.word.claimlang",
+				"match": "\\b(Minus|Dot|Timelt|Agentlt)\b"
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.claimlang",
+				"match": "\\b(Check|Satisfies|Satisfiable|Valid)\\b"
+			},
+			{
+				"name": "keyword.storage.type.claimlang",
+				"match": "\\b(TransitionSystem|EventTransitionSystem|Formula|TrustOrder|TimeOrder|State|Event)\\b"
+			},
+			{
+				"name": "keyword.storage.modifier.claimlang",
+				"match": "\\b(Initial)\\b"
+			}]
+		},
+		"formula_literals": {
+			"begin": "\"",
+    		"end": "\"",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.string.begin.formula_literal.claimlang" }
+			},
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.string.end.formula_literal.claimlang" }
+			},
+			"name": "string.quoted.double.formula_literal.claimlang",
+			"patterns": [
+				{
+					"include" : "#formula_operators"
+				}
+			]
+		},
+		"identifiers": {
+			"patterns": [{
+				"name": "variable.identifier.claimlang",
+				"match": "\\b[a-z_A-Z][a-z_A-Z0-9]*\\b"
+			}]
+		},
+		"punctuation": {
+			"patterns": [{
+				"name": "punctuation.terminator.claimlang",
+				"match": ";"
+			},
+			{
+				"match": "[\\(\\)\\{\\}\\[\\]]",
+				"name": "punctuation.parenthesis.claimlang"
+			}]
+		},
+		"formula_operators": {
+			"patterns": [
+				{
+					"name": "keyword.operator.logic.in_formula.claimlang",
+					"match": "<=>"
+				},
+				{
+					"name": "keyword.operator.logic.in_formula.claimlang",
+					"match": "=>|&&|\\|\\|"
+				},
+				{
+					"name": "keyword.operator.logic.in_formula.claimlang",
+					"match": "<|⊴|-|\\.|∙|=|≅|:|⊡|¬|⊤|⊥|G|F|X|U|⋀|⋁"
+				},
+				{
+					"match": "[\\(\\)\\{\\}\\[\\]]",
+					"name": "punctuation.parenthesis.in_formula.claimlang"
+				},
+				{
+					"name": "keyword.operator.word.in_formula.claimlang",
+					"match": "\\b(minus|dot|timelt|agentlt|square|boxdot|not|iff|implies|and|or|always|eventually|next|until)\\b"
+				},
+				{
+					"name": "constant.language.in_formula.claimlang",
+					"match": "\\b(START|true|false)\\b"
+				},
+				{
+					"name": "variable.identifier.claimlang",
+					"match": "\\b[a-z_A-Z][a-z_A-Z0-9]*\\b"
+				},
+				{
+					"begin": "/\\*",
+					"beginCaptures": {
+						"0": { "name": "punctuation.definition.comment.begin.in_formula.claimlang" }
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": { "name": "punctuation.definition.comment.end.in_formula.claimlang" }
+					},
+					"name": "comment.block.in_formula.claimlang",
+					"patterns": [
+						{
+							"match": "(\\*)+/",
+							"name": "comment.block.in_formula.claimlang"
+						}
+					]
+				}
+			]
+		}
+	},
+	"scopeName": "source.claimlang"
+}

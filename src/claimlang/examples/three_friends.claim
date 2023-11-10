@@ -1,0 +1,74 @@
+//Three friends
+
+TransitionSystem T {
+    TrustOrder{
+        bob <[lis_bt_cph] charlie <[lis_bt_cph] alice;
+        charlie <[lis_bt_muc] alice <[lis_bt_muc] bob;
+        alice <[lis_bt_ber] charlie;
+        bob <[lis_bt_ber] charlie;
+    }
+
+    Initial State money {
+        Event(meh);
+        charlie : - t . lis_bt_ber;
+        bob     : - t . lis_bt_muc;
+        charlie :   t . lis_bt_cph;
+        alice   : - t . lis_bt_cph;
+    }
+
+    State weather {
+        Event(meh);
+        alice   :   t . lis_bt_muc;
+        bob     :   t . lis_bt_ber;
+        charlie :   t . lis_bt_cph;        
+    }
+
+    State food {
+        Event(meh);
+        alice   : - t . lis_bt_ber;
+        bob     : - t . lis_bt_ber;
+        charlie :   t . lis_bt_ber;
+        alice   :   t . lis_bt_muc;
+        alice   :   t . lis_bt_cph;        
+    }
+
+    State nightlife {
+        Event(alice_leaves);
+        charlie : - t . lis_bt_ber; 
+        bob     : - t . lis_bt_ber; 
+    }
+
+    State family {
+        Event(alice_finds_david);
+        charlie:    t . lis_bt_cph;
+        charlie:    t . lis_bt_muc;
+        charlie:    t . lis_bt_ber;
+    }
+    money     -> weather   -> money;
+    money     -> food      -> money;
+    food      -> weather   -> food;
+    food      -> nightlife -> food;
+    weather   -> nightlife -> weather;
+    money     -> nightlife -> money;
+    nightlife -> family    -> nightlife;
+    family    -> money;
+    family    -> food;
+    family    -> weather;
+}
+
+Formula phi_lis     = "((F G t . lis_bt_cph) and (F G t . lis_bt_muc) and (F G t . lis_bt_ber))";
+Formula phi_bob     = "G(t . lis_bt_muc implies (G(not (bob : - t . lis_bt_muc))))";
+Formula phi_charlie = "G(t . lis_bt_ber implies (G(not (charlie : - t . lis_bt_ber))))";
+
+Check T Satisfies phi_lis;
+
+//Takes too much time to run:
+/*
+Check T Satisfies "(F alice_finds_david) implies ((F G t . lis_bt_cph) and (F G t . lis_bt_muc) and (F G t . lis_bt_ber))";
+//This is equivalent to
+//Check T Satisfies "(F alice_finds_david) implies $phi_lis";
+
+Check T Satisfies "(G(t . lis_bt_muc implies (G(not (bob : - t . lis_bt_muc))))) and (G(t . lis_bt_ber implies (G(not (charlie : - t . lis_bt_ber)))))and (F alice_finds_david) implies ((F G (t . lis_bt_cph)) and (F G (t . lis_bt_muc)) and (F G (t . lis_bt_ber)))";
+// This is equivalent to 
+// Check T Satisfies "($phi_bob and $phi_charlie and (F alice_finds_david)) implies $phi_lis";
+*/

@@ -1,0 +1,25 @@
+{
+  "name": "claimlang_extension",
+  "displayName": "ClaimLang",
+  "description": "Syntax higlighting support for the ClaimLang.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "claimlang",
+      "aliases": ["ClaimLang", "claimlang"],
+      "extensions": [".claimlang",".claim"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "claimlang",
+      "scopeName": "source.claimlang",
+      "path": "./syntaxes/claimlang.tmLanguage.json"
+    }]
+  }
+}
