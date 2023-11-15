@@ -85,13 +85,11 @@ Formula phi1 = "F(arrest)";
 
 Formula phi2 = "(G F crime) implies (F(arrest))";
 
-Formula phi3 = "(G F crime) implies (G F(HR : six_pm . HR_guilty))";
+Formula phi3 = "(G F crime) implies (G F(HR : six_pm . HR_guilty)) and (G F(SJ : six_pm . SJ_guilty))";
 
-Formula phi4 = "(G F crime) implies (G F(HR : six_pm . HR_guilty)) and (G F(SJ : six_pm . SJ_guilty))";
+Formula phi4 = "(F (crime and (X crime))) implies (F(arrest))";
 
-Formula phi5 = "(F (crime and (X crime))) implies (F(arrest))";
-
-Formula phi6 = "G( (crime and (X crime)) implies (X X (arrest)) )";
+Formula phi5 = "G( (crime and (X crime)) implies (X X (arrest)) )";
 
 //Checking formulas
 Check E_HR * E_SJ Satisfies phi1;
@@ -100,10 +98,8 @@ Check E_HR * E_SJ * E_PH Satisfies phi1;
 
 Check E_HR * E_SJ * E_PH Satisfies phi2;
 
-Check E_HR * E_SJ * E_PH Satisfies phi3; 
+Check E_HR * E_SJ * E_PH Satisfies phi3;
 
-Check E_HR * E_SJ * E_PH Satisfies phi4;
+// Check E_HR * E_SJ * E_PH Satisfies phi4; //takes too long to verify
 
 // Check E_HR * E_SJ * E_PH Satisfies phi5; //takes too long to verify
-
-// Check E_HR * E_SJ * E_PH Satisfies phi6; //takes too long to verify

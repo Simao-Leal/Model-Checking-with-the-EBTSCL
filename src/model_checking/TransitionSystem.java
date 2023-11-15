@@ -1,5 +1,6 @@
 package model_checking;
 
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -200,7 +201,13 @@ public class TransitionSystem extends TransitionSystemStruc<String, Void, LocalI
 		}
 	}
 	
-	private boolean compatiblePathQ(List<Pair> path, int periodStart) {
+	private boolean[] compatiblePathQ(List<Pair> path, int periodStart) {
+		/*
+		 * returns two boolean values.
+		 * compatibleQ -> if the deltas form a compatible path
+		 * keepExpandingQ -> if they do not form a compatible path, if this path should keep being expanded
+		 */
+		
 		/*
 		 * This function assumes that path is such that each delta of
 		 * path is locally satisfiable by its respective state and that
@@ -218,15 +225,18 @@ public class TransitionSystem extends TransitionSystemStruc<String, Void, LocalI
 		 * to extract the liveness conditions, it is enough to look at any delta in the period
 		 * (in periodStart for example). The condition must be met at some point in the period.
 		 */
+		boolean[] res = new boolean[2];
+		SetFormulas loopingDelta = path.get(periodStart).delta;
+		
 		SetFormulas requirements = new SetFormulas();
 		//adding requirements for period
-		for(Until until : Sat.untilFormulas(path.get(periodStart).delta)) {
+		for(Until until : Sat.untilFormulas(loopingDelta)) {
 			requirements.add(until.getInner2());
 		}
-		for(Eventually eventually : Sat.eventuallyFormulas(path.get(periodStart).delta)) {
+		for(Eventually eventually : Sat.eventuallyFormulas(loopingDelta)) {
 			requirements.add(eventually.getInner());
 		}
-		for(Always always : Sat.notAlwaysFormulas(path.get(periodStart).delta)) {
+		for(Always always : Sat.notAlwaysFormulas(loopingDelta)) {
 			requirements.add(always.getInner().clone().negate());
 		}
 
@@ -237,10 +247,24 @@ public class TransitionSystem extends TransitionSystemStruc<String, Void, LocalI
 				if(path.get(i).delta.contains(beta)) toRemove.add(beta);
 			}
 		}
-		requirements.removeAll(toRemove);
+		//keepExpandingQ:
+		/*
+		 * We keep expanding this path if the number of requirements is strictly bigger
+		 * than the number of blocks after the first appearance of delta.
+		 * The number of blocks is equal to the number of times delta has appeared in delta.
+		 * Intuitively, if you have 1 requirement you have 1 block to deal with it.
+		 * If you could not do it in 1 block, there is no point in continuing this path
+		 */
+		//counting number of sets in path equal to the delta in periodStart
+		int counter = 0;
+		for(Pair pair : path) if(pair.delta.equals(loopingDelta)) counter++;
+		res[1] = requirements.size() > counter;
 		
-		//IF requirements is empty then we've found a compatible path 
-		return requirements.isEmpty();
+		//compatibleQ:
+		requirements.removeAll(toRemove);
+		//IF requirements is empty then we've found a compatible path
+		res[0] = requirements.isEmpty();
+		return res;
 	}
 	
 	private String printPath(List<Pair> path) {
@@ -257,7 +281,6 @@ public class TransitionSystem extends TransitionSystemStruc<String, Void, LocalI
 	
 	public BoolModelPair<Path> pathSat(Formula phi){
 		boolean DFS = false;
-		System.out.println(this);
 		/*
 		 * Tries to find a path in the transition system that satisfies phi
 		 * by following the tree-like structure of fig 3 (p.20) and the
@@ -305,7 +328,6 @@ public class TransitionSystem extends TransitionSystemStruc<String, Void, LocalI
 		//initializing the queue
 		for(SetFormulas delta : omega.star()) { //for each initial delta
 			if(!Sat.locallyIncompatibleQ(delta)) { //if delta is satisfiable
-				System.out.println(getInitialStates());
 				for(String state : getInitialStates()) { //for each initial state
 					if(label(state).locallySat(delta)){ //if the state satisfies delta
 						//create a new path with (state, delta)
@@ -320,6 +342,7 @@ public class TransitionSystem extends TransitionSystemStruc<String, Void, LocalI
 		
 		// ============[ SEARCH ]============
 		boolean found = false;
+		boolean keepExpandingQ;
 		List<Pair> path = null;
 		int periodStart = 0;
 		while(!found && !queue.isEmpty()) {
@@ -337,7 +360,17 @@ public class TransitionSystem extends TransitionSystemStruc<String, Void, LocalI
 							if(path.contains(pair)) {
 								//if so, check if the deltas in path form a compatible path
 								periodStart = path.indexOf(pair);
-								found = compatiblePathQ(path, periodStart);
+								boolean[] temp = compatiblePathQ(path, periodStart);
+								found = temp[0];
+								keepExpandingQ = temp[1];
+								
+								//keep expanding path if number of requirements is bigger t
+								//than number of times delta at periodStart appeared already
+								if(keepExpandingQ) {
+									List<Pair> newPath = new LinkedList<>(path);
+									newPath.add(new Pair(state, delta));
+									if(DFS) queue.addFirst(newPath); else queue.addLast(newPath); //replace by addFirst if you want DFS
+								}
 							} else {
 								//if it doesn't make a cycle we add (state, delta) to path and add path to the queue
 								List<Pair> newPath = new LinkedList<>(path);

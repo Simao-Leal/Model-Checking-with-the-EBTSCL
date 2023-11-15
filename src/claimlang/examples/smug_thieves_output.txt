@@ -112,9 +112,6 @@ Claims: (SJ : -(evening ∙ SJ_guilty)), (SJ : -(six_pm ∙ SJ_guilty)), (HR : (
 <<<END OF CYCLE>>>
 
 
-Checking whether the transition system E_HR ⨂ E_SJ ⨂ E_PH satisfies the formula (GFcrime => GF(HR : (six_pm ∙ HR_guilty)))
-Satisfies!
-
 Checking whether the transition system E_HR ⨂ E_SJ ⨂ E_PH satisfies the formula (GFcrime => (GF(HR : (six_pm ∙ HR_guilty)) ⋀ GF(SJ : (six_pm ∙ SJ_guilty))))
 Does not satisfy!
 Counter example:

@@ -1,5 +1,6 @@
 package logicHandlers;
 
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -193,12 +194,25 @@ public class Sat {
 								if(path.get(i).contains(beta)) toRemove.add(beta);
 							}
 						}
+						/*
+						 * We keep expanding this path if the number of requirements is strictly bigger
+						 * than the number of blocks after the first appearance of delta.
+						 * The number of blocks is equal to the number of times delta has appeared in delta.
+						 * Intuitively, if you have 1 requirement you have 1 block to deal with it.
+						 * If you could not do it in 1 block, there is no point in continuing this path
+						 */
+						if(requirements.size() > Collections.frequency(path, delta)) {
+							List<SetFormulas> l = new LinkedList<>(path);
+							l.add(delta);
+							queue.addLast(l); //replace by addFirst if you want DFS
+						}
+						
 						requirements.removeAll(toRemove);
 						
 						//IF requirements is empty then we've found a satisfying path 
 						found = requirements.isEmpty();
 					} else {
-						//we only keep expanding the path if the next set is not already in the path
+						//if a cycle cannot be formed we keep expanding the path
 						List<SetFormulas> l = new LinkedList<>(path);
 						l.add(delta);
 						queue.addLast(l); //replace by addFirst if you want DFS
@@ -282,33 +296,32 @@ public class Sat {
 		Formula q = new AgentClaim(new AgentSymbol("a2"), new Claim(new TimeSymbol("t2"), new PropositionalSymbol("p2")));
 		
 		
-		Formula[] forms = new Formula[1];
+		Formula[] forms = new Formula[20];
 		
 		//LVM Module02 p.4
-//		forms[0] = new Equivalent(new Next(p.clone().negate()), new Next(p).negate() ); //valid
-//		forms[1] = new Implies(new Eventually(new And(p, q)),new And(new Eventually(p), new Eventually(q)));//valid
-//		forms[2] = new Equivalent(new Eventually(new Or(p, q)),new Or(new Eventually(p), new Eventually(q)));//valid
-//		forms[3] = new Equivalent(new Until(p, q),new Or(q,new And(p, new Next(new Until(p,q)))));//valid
-//		forms[4] = new Implies(new And(new Eventually(p), new Eventually(q)),new Eventually(new And(p, q)));//not valid
-//				
-//		//LVM exercises02 p.1
-//		forms[5] = new Implies(new Next(new Always(p)), new Always(new Next(p))); //valid
-//		forms[6] = new Implies(new Next(new Eventually(p)), new Eventually(new Next(p))); //valid
-//		forms[7] = new Implies(new Always(p), new Eventually(p)); //valid
-//		forms[8] = new Implies(new Eventually(p), new Always(p)); //not valid
-//		forms[9] = new Always(new Implies(new Next(new Next(p)), new Next(p))); //not valid
-//		forms[10] = new Implies(new Eventually(p), new Always(new Eventually(p))); //not valid
-//		forms[11] = new Implies(new Always(p), new Eventually(new Eventually(p))); //valid
-//		forms[12] = new Implies(new Always(new And(p, q)), new And(new Always(p), new Always(q)) ); //valid //this is the one from the paper
-//		forms[13] = new Implies(new Always(new Or(p, q)), new Or(new Always(p), new Always(q)) ); //not valid
-//		forms[14] = new Implies(new And(new Always(p), new Always(q)), new Always(new And(p, q)) ); //valid
-//		forms[15] = new Implies(new Or(new Always(p), new Always(q)), new Always(new Or(p, q))); // valid
-//		forms[16] = new Implies(new Eventually(new And(p, q)), new And(new Eventually(p), new Eventually(q)) ); //valid
-//		forms[17] = new Implies(new Eventually(new Or(p, q)), new Or(new Eventually(p), new Eventually(q)) ); //valid
-		forms[0] = new And(new Implies(new And(new Eventually(p), new Eventually(q)), new Eventually(new And(p, q))), new Event(new EventSymbol("e"))); //not valid
-//		forms[19] = new Implies(new Or(new Eventually(p), new Eventually(q)), new Eventually(new Or(p, q))); // valid
-//		forms[20] = new Implies(new And(p, new Always(new Implies(p, new Next(p)))), new Always(p)); //valid
-		
+		forms[0] = new Equivalent(new Next(p.clone().negate()), new Next(p).negate() ); //valid
+		forms[1] = new Implies(new Eventually(new And(p, q)),new And(new Eventually(p), new Eventually(q)));//valid
+		forms[2] = new Equivalent(new Eventually(new Or(p, q)),new Or(new Eventually(p), new Eventually(q)));//valid
+		forms[3] = new Equivalent(new Until(p, q),new Or(q,new And(p, new Next(new Until(p,q)))));//valid
+		forms[4] = new Implies(new And(new Eventually(p), new Eventually(q)),new Eventually(new And(p, q)));//not valid
+				
+		//LVM exercises02 p.1
+		forms[5] = new Implies(new Next(new Always(p)), new Always(new Next(p))); //valid
+		forms[6] = new Implies(new Next(new Eventually(p)), new Eventually(new Next(p))); //valid
+		forms[7] = new Implies(new Always(p), new Eventually(p)); //valid
+		forms[8] = new Implies(new Eventually(p), new Always(p)); //not valid
+		forms[9] = new Always(new Implies(new Next(new Next(p)), new Next(p))); //not valid
+		forms[10] = new Implies(new Eventually(p), new Always(new Eventually(p))); //not valid
+		forms[11] = new Implies(new Always(p), new Eventually(new Eventually(p))); //valid
+		forms[12] = new Implies(new Always(new And(p, q)), new And(new Always(p), new Always(q)) ); //valid //this is the one from the paper
+		forms[13] = new Implies(new Always(new Or(p, q)), new Or(new Always(p), new Always(q)) ); //not valid
+		forms[14] = new Implies(new And(new Always(p), new Always(q)), new Always(new And(p, q)) ); //valid
+		forms[15] = new Implies(new Or(new Always(p), new Always(q)), new Always(new Or(p, q))); // valid
+		forms[16] = new Implies(new Eventually(new And(p, q)), new And(new Eventually(p), new Eventually(q)) ); //valid
+		forms[17] = new Implies(new Eventually(new Or(p, q)), new Or(new Eventually(p), new Eventually(q)) ); //valid
+		forms[18] = new Implies(new Or(new Eventually(p), new Eventually(q)), new Eventually(new Or(p, q))); // valid
+		forms[19] = new Implies(new And(p, new Always(new Implies(p, new Next(p)))), new Always(p)); //valid
+	
 		
 		for(Formula psi : forms) {
 			System.out.println(psi);
